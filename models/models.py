@@ -13,13 +13,12 @@ class User(Base):
     email = Column(VARCHAR(255), nullable = False)
     teams_id = Column(Integer, ForeignKey("teams.id"), nullable = True)
 
-    teams = relationship("Team", back_populates="users", cascade="all, delete-orphan")
+    team = relationship("Team", back_populates="user")
 
 class Team(Base):
     __tablename__ = "teams"
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable = True)
 
-    users = relationship("User", back_populates="teams", cascade="all, delete-orphan")
+    user = relationship("User", back_populates="team", cascade="all, delete-orphan")

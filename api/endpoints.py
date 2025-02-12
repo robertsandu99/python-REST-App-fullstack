@@ -1,37 +1,52 @@
 from sqlalchemy import create_engine
 #from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from fastapi import APIRouter
-from fastapi import Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+from fastapi import Depends, HTTPException, APIRouter, status
 from models.models import User, Team
-#from schemas.schemas import PatientCreate, AssistantCreate
-
+from schemas.schemas import UserCreate, UserGet, TeamCreate, TeamGet, TeamBase, UserBase
+from repository.repository import TeamRepo
 router = APIRouter()
 
-DATABASE_URL = 'postgresql://postgres:asdasd@localhost:5432/HourTracking'
-
-engine = create_engine(DATABASE_URL)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @router.get("/")
 async def root():
     return {"message": "Hello World"}
 
-async def get_db():
-    try:
-        db = SessionLocal()
-        yield db
-    finally:
-        db.close()
-        
-@router.post("/assistants/")
-async def create_assistant(
-    assistant: AssistantCreate, db: Session = Depends(get_db)
+
+# @router.post("/users/",
+#             response_model=UserCreate,
+#             status_code=status.HTTP_201_CREATED)
+
+# async def create_user(
+#     user: UserCreate,
+#     db: Session = Depends(get_db)
+#     ):
+
+#     db_user = User(name=user.name, email=user.email)
+#     db.add(db_user)
+#     db.commit()
+#     db.refresh(db_user)
+#     return db_user        
+
+# @router.post("/users/")
+# async def create_assistant(
+#     assistant: AssistantCreate, db: Session = Depends(get_db)
+# ):
+#     db_assistant = Assistant(name=assistant.name)
+#     db.add(db_assistant)
+#     db.commit()
+#     db.refresh(db_assistant)
+#     return db_assistant
+@router.post(
+    "/teams", response_model=TeamBase, status_code=status.HTTP_201_CREATED
+)
+async def create_new_team(
+    newteam: TeamCreate,
+    db_session: TeamRepo = Depends(TeamRepo)
 ):
-    db_assistant = Assistant(name=assistant.name)
-    db.add(db_assistant)
-    db.commit()
-    db.refresh(db_assistant)
-    return db_assistant
+    try:
+        created_team = await db_session.create_team(newteam)
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="This team name already exists")
+    return created_team
