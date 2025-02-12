@@ -39,6 +39,14 @@ async def root():
 #     db.commit()
 #     db.refresh(db_assistant)
 #     return db_assistant
+
+
+
+
+
+############################### TEAMS ENDPOINTS #########################################
+
+
 @router.post(
     "/teams", 
     response_model=TeamBase, 
@@ -60,12 +68,18 @@ async def create_new_team(
             status_code=status.HTTP_200_OK
             )
 async def get_list_teams(db_session: TeamRepo = Depends(TeamRepo)):
-    teams = await db_session.get_all_teams()
-    return teams
+    teams_list = await db_session.get_all_teams()
+    return teams_list
+
+
+############################### USERENDPOINTS #########################################
+
 
 
 @router.post(
-    "/users", response_model=UserGet, status_code=status.HTTP_201_CREATED
+    "/users", 
+    response_model=UserGet, 
+    status_code=status.HTTP_201_CREATED
 )
 async def create_new_user(
     new_user: UserCreate,
@@ -76,3 +90,12 @@ async def create_new_user(
     except IntegrityError:
         raise HTTPException(status_code=400, detail="User with this email already exists")
     return created_user
+
+
+@router.get("/users",
+            response_model=List[UserGet], 
+            status_code=status.HTTP_200_OK
+            )
+async def get_list_users(db_session: UserRepo = Depends(UserRepo)):
+    users_list = await db_session.get_all_users()
+    return users_list

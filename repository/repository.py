@@ -45,6 +45,12 @@ class UserRepo:
             await session.commit()
             await session.refresh(new_user)
             return new_user
+
+    async def get_all_users(self):
+        async with async_session() as session:
+            select_users = await session.execute(select(User))
+            all_users = select_users.scalars().all()
+            return all_users
         
     #  async def update_user(self, user_id: int, user_data: UserCreate):
     #     async with async_session() as session:
