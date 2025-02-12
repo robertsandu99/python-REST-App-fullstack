@@ -31,4 +31,12 @@ class TeamRepo:
             await session.refresh(new_team)
             return new_team
 
+class UserRepo:
+    async def create_user(self, user: UserCreate):
+        async with async_session() as session:
+            new_user = User(name=user.name, email=user.email)
+            session.add(new_user)
+            await session.commit()
+            await session.refresh(new_user)
+            return new_user
 

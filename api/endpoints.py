@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import Depends, HTTPException, APIRouter, status
 from models.models import User, Team
 from schemas.schemas import UserCreate, UserGet, TeamCreate, TeamGet, TeamBase, UserBase
-from repository.repository import TeamRepo
+from repository.repository import TeamRepo, UserRepo
 router = APIRouter()
 
 
@@ -50,3 +50,16 @@ async def create_new_team(
     except IntegrityError:
         raise HTTPException(status_code=400, detail="This team name already exists")
     return created_team
+
+@router.post(
+    "/users", response_model=UserGet, status_code=status.HTTP_201_CREATED
+)
+async def create_new_user(
+    new_user: UserCreate,
+    db_session: UserRepo = Depends(UserRepo)
+):
+    try:
+        created_user = await db_session.create_user(new_user)
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="User with this email already exists")
+    return created_user

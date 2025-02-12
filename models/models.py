@@ -10,7 +10,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(VARCHAR(55), nullable = False)
-    email = Column(VARCHAR(255), nullable = False)
+    email = Column(VARCHAR(255), unique=True, nullable = False)
     teams_id = Column(Integer, ForeignKey("teams.id"), nullable = True)
 
     team = relationship("Team", back_populates="user")
