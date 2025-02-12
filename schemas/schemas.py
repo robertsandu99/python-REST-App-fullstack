@@ -37,3 +37,6 @@ class TeamGet(TeamBase):
 
 class TeamCreate(TeamBase):
     pass
+
+class TeamUpdate(BaseModel):
+    name: Optional[str]

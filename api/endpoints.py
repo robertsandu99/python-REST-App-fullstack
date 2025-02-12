@@ -7,6 +7,7 @@ from models.models import User, Team
 from schemas.schemas import UserCreate, UserGet, TeamCreate, TeamGet, TeamBase, UserBase
 from repository.repository import TeamRepo, UserRepo
 router = APIRouter()
+from typing import List
 
 
 @router.get("/")
@@ -39,7 +40,9 @@ async def root():
 #     db.refresh(db_assistant)
 #     return db_assistant
 @router.post(
-    "/teams", response_model=TeamBase, status_code=status.HTTP_201_CREATED
+    "/teams", 
+    response_model=TeamBase, 
+    status_code=status.HTTP_201_CREATED
 )
 async def create_new_team(
     newteam: TeamCreate,
@@ -50,6 +53,16 @@ async def create_new_team(
     except IntegrityError:
         raise HTTPException(status_code=400, detail="This team name already exists")
     return created_team
+
+
+@router.get("/teams",
+            response_model=List[TeamGet], 
+            status_code=status.HTTP_200_OK
+            )
+async def get_list_teams(db_session: TeamRepo = Depends(TeamRepo)):
+    teams = await db_session.get_all_teams()
+    return teams
+
 
 @router.post(
     "/users", response_model=UserGet, status_code=status.HTTP_201_CREATED

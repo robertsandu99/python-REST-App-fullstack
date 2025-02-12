@@ -30,6 +30,12 @@ class TeamRepo:
             await session.commit()
             await session.refresh(new_team)
             return new_team
+        
+    async def get_all_teams(self):
+        async with async_session() as session:
+            select_teams = await session.execute(select(Team))
+            all_teams = select_teams.scalars().all()
+            return all_teams
 
 class UserRepo:
     async def create_user(self, user: UserCreate):
@@ -39,4 +45,24 @@ class UserRepo:
             await session.commit()
             await session.refresh(new_user)
             return new_user
+        
+    #  async def update_user(self, user_id: int, user_data: UserCreate):
+    #     async with async_session() as session:
+    #         user = await session.get(User, user_id)
+    #         if not user:
+    #             raise HTTPException(status_code=404, detail="User not found")
+            
+    #         # Update user fields
+    #         user.name = user_data.name
+    #         user.email = user_data.email
 
+    #         # If a team is provided in user_data, update the team association
+    #         if user_data.team_id:
+    #             user.teams_id = user_data.team_id
+    #         else:
+    #             user.teams_id = None  # If no team, remove the assignment
+
+    #         session.add(user)
+    #         await session.commit()
+    #         await session.refresh(user)
+    #         return user
