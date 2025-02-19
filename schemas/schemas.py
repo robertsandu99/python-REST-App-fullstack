@@ -7,7 +7,7 @@ class UserBase(BaseModel):
     email: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserCreate(UserBase):
@@ -16,19 +16,24 @@ class UserCreate(UserBase):
 
 class UserGet(UserBase):
     id: int
-    team_id: Optional[int] = None
+    teams_id: Optional[int] = None
+
+
+class UserPut(UserBase):
+    id: int
+    teams_id: int
 
 
 class User(UserBase):
     id: int
-    team: Optional["TeamGet"] = None
+    teams_id: Optional["TeamGet"] = None
 
 
 class TeamBase(BaseModel):
     name: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class TeamGet(TeamBase):

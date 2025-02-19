@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
 from fastapi import Depends, HTTPException, APIRouter, status
 from models.models import User, Team
-from schemas.schemas import UserCreate, UserGet, TeamCreate, TeamGet, TeamBase, UserBase
+from schemas.schemas import UserCreate, UserGet, TeamCreate, TeamGet, TeamBase, UserBase, UserPut
 from repository.repository import TeamRepo, UserRepo
 router = APIRouter()
 from typing import List
@@ -15,35 +15,6 @@ async def root():
     return {"message": "Hello World"}
 
 
-# @router.post("/users/",
-#             response_model=UserCreate,
-#             status_code=status.HTTP_201_CREATED)
-
-# async def create_user(
-#     user: UserCreate,
-#     db: Session = Depends(get_db)
-#     ):
-
-#     db_user = User(name=user.name, email=user.email)
-#     db.add(db_user)
-#     db.commit()
-#     db.refresh(db_user)
-#     return db_user        
-
-# @router.post("/users/")
-# async def create_assistant(
-#     assistant: AssistantCreate, db: Session = Depends(get_db)
-# ):
-#     db_assistant = Assistant(name=assistant.name)
-#     db.add(db_assistant)
-#     db.commit()
-#     db.refresh(db_assistant)
-#     return db_assistant
-
-
-
-
-
 ############################### TEAMS ENDPOINTS #########################################
 
 
@@ -51,11 +22,11 @@ async def root():
     "/teams", 
     response_model=TeamBase, 
     status_code=status.HTTP_201_CREATED
-)
+    )
 async def create_new_team(
     newteam: TeamCreate,
     db_session: TeamRepo = Depends(TeamRepo)
-):
+    ):
     try:
         created_team = await db_session.create_team(newteam)
     except IntegrityError:
@@ -72,7 +43,7 @@ async def get_list_teams(db_session: TeamRepo = Depends(TeamRepo)):
     return teams_list
 
 
-############################### USERENDPOINTS #########################################
+############################### USER ENDPOINTS #########################################
 
 
 
@@ -80,11 +51,11 @@ async def get_list_teams(db_session: TeamRepo = Depends(TeamRepo)):
     "/users", 
     response_model=UserGet, 
     status_code=status.HTTP_201_CREATED
-)
+    )
 async def create_new_user(
     new_user: UserCreate,
     db_session: UserRepo = Depends(UserRepo)
-):
+    ):
     try:
         created_user = await db_session.create_user(new_user)
     except IntegrityError:
@@ -96,6 +67,23 @@ async def create_new_user(
             response_model=List[UserGet], 
             status_code=status.HTTP_200_OK
             )
-async def get_list_users(db_session: UserRepo = Depends(UserRepo)):
+async def get_list_users(
+    db_session: UserRepo = Depends(UserRepo)
+    ):
     users_list = await db_session.get_all_users()
     return users_list
+
+
+@router.put(
+    "/users/{user_id}/assign-to-team/{team_id}", 
+    response_model=UserPut, 
+    status_code=status.HTTP_200_OK
+    )
+async def assign_user_to_team(
+    user_id: int,
+    teams_id: int,
+    db_session: UserRepo = Depends(UserRepo)
+    ):
+    assigned_user = await db_session.assign_user_to_team(user_id, teams_id)
+
+    return assigned_user
