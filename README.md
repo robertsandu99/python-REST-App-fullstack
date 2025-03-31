@@ -1,3 +1,5 @@
-# python-REST-App-fullstack
+# PYTHON TIME REPORTING APP
 
-Creating a Full-Stack web service using Python for Backend and JS for Frontend.
+Creating a Full-Stack application for users to report their working hours.
+
+Ongoing...
