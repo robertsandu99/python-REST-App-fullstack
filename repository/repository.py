@@ -2,9 +2,10 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.sql.expression import exists
 from database.connection_db import async_session
-from models.models import User, Team
-from schemas.schemas import UserCreate, TeamCreate
+from models.models import User, Team, UserHour
+from schemas.schemas import UserCreate, TeamCreate, UserHourCreate
 from utils.exceptions import InvalidUserIdError, UserAlreadyAssignedError, InvalidTeamIdError
+from datetime import datetime, timedelta
 from fastapi import HTTPException
 
 
@@ -57,6 +58,47 @@ class UserRepo:
                 return user
     
 
+# class UserHourRepo:
+#     async def create_user_hour(self, users_id: int, userhour: UserHourCreate):
+#         async with async_session() as session:
+#             query_user = select(exists().where(User.id == users_id))
+#             result_user = await session.execute(query_user)
+
+#             if not result_user.scalar():
+#                 raise InvalidUserIdError
+#             else:
+#                 new_userhour = UserHour(users_id=users_id, date=userhour.date.replace(tzinfo=None), hours=userhour.hours, comment=userhour.comment)
+#                 print(new_userhour)
+#                 session.add(new_userhour)
+#                 await session.commit()
+#                 return new_userhour
+            
+
+
+class UserHourRepo:
+    async def create_user_hour(self, users_id: int, userhour: UserHourCreate):
+        async with async_session() as session:
+            query_user = select(User).where(User.id == users_id)
+            result_user = await session.execute(query_user)
+            user_obj = result_user.scalar()
+            
+            if not user_obj:
+                raise InvalidUserIdError
+            
+            # Romania timezone
+            updated_date = userhour.date + timedelta(hours=3)
+
+            new_userhour = UserHour(
+                users_id=users_id,
+                date=updated_date.replace(tzinfo=None),
+                hours=userhour.hours,
+                overtime=userhour.overtime,
+                comment=userhour.comment,
+                user_name=user_obj.name 
+            )
+            session.add(new_userhour)
+            await session.commit()
+            return new_userhour
 
 
     #  async def update_user(self, user_id: int, user_data: UserCreate):

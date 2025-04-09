@@ -1,13 +1,10 @@
-from sqlalchemy import create_engine
-#from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
 from fastapi import Depends, HTTPException, APIRouter, status
-from models.models import User, Team
-from schemas.schemas import UserCreate, UserGet, TeamCreate, TeamGet, TeamBase, UserBase, UserPut
-from repository.repository import TeamRepo, UserRepo
-router = APIRouter()
+from schemas.schemas import UserCreate, UserGet, TeamCreate, TeamGet, TeamBase, UserBase, UserPut, UserHourGet, UserHourCreate
+from repository.repository import TeamRepo, UserRepo, UserHourRepo
 from typing import List
+from utils.exceptions import InvalidUserIdError, InvalidTeamIdError, UserAlreadyAssignedError
+router = APIRouter()
 
 
 @router.get("/")
@@ -84,6 +81,31 @@ async def assign_user_to_team(
     teams_id: int,
     db_session: UserRepo = Depends(UserRepo)
     ):
-    assigned_user = await db_session.assign_user_to_team(user_id, teams_id)
-
+    try:
+        assigned_user = await db_session.assign_user_to_team(user_id, teams_id)
+    except InvalidUserIdError as e:
+        raise HTTPException(status_code=404, detail=e.message)
+    except InvalidTeamIdError as e:
+        raise HTTPException(status_code=404, detail=e.message)
+    except UserAlreadyAssignedError as e:
+        raise HTTPException(status_code=400, detail=e.message)
     return assigned_user
+
+############################## USERS_HOURS ##############################################
+@router.post(
+    "/hours/{users_id}", 
+    response_model=UserHourGet,
+    status_code=status.HTTP_201_CREATED
+    )
+async def add_hours_for_users(
+    users_id: int,
+    userhour: UserHourCreate,
+    db_session: UserHourRepo = Depends(UserHourRepo)
+    ):
+    try:
+        added_user_hours = await db_session.create_user_hour(users_id, userhour)
+    except InvalidUserIdError as e:
+        raise HTTPException(status_code=404, detail=e.message)
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="asdasdasddas")
+    return added_user_hours

@@ -1,5 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class UserBase(BaseModel):
@@ -45,3 +46,25 @@ class TeamCreate(TeamBase):
 
 class TeamUpdate(BaseModel):
     name: Optional[str]
+
+
+class UserHourGet(BaseModel):
+    id: int
+    users_id: int
+    user_name: str
+    date: datetime
+    hours: int
+    overtime: int
+    comment: str
+
+    class Config:
+        from_attributes = True
+
+class UserHourCreate(BaseModel):
+    date: datetime
+    hours: int
+    overtime: Optional[int] = None
+    comment: Optional[str] = None
+
+    class Config:
+        from_attributes = True

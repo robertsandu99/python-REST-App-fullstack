@@ -1,6 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, VARCHAR, ForeignKey, Integer, String
-from datetime import datetime
+from sqlalchemy import Column, VARCHAR, ForeignKey, Integer, String, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
@@ -15,6 +14,10 @@ class User(Base):
 
     team = relationship("Team", back_populates="user")
 
+    __table_args__ = (
+        UniqueConstraint('email', name='uniqu3_user_email'),
+    )
+
 class Team(Base):
     __tablename__ = "teams"
 
@@ -22,3 +25,17 @@ class Team(Base):
     name = Column(String, unique=True)
 
     user = relationship("User", back_populates="team", cascade="all, delete-orphan")
+
+
+class UserHour(Base):
+    __tablename__ = "users_hours"
+
+    id = Column(Integer, primary_key=True)
+    users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    date = Column(DateTime, nullable=False)
+    hours = Column(Integer, nullable=False)
+    user_name = Column(VARCHAR(255), nullable=False)
+    overtime = Column(Integer, nullable=True)
+    comment = Column(VARCHAR(255), nullable=True)
+
+    user = relationship("User")
