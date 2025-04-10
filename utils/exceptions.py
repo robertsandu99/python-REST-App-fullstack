@@ -27,7 +27,21 @@ class InvalidTeamIdError(InvalidIdError):
         message = "The team with the id requested does not exist"
         InvalidIdError.__init__(self, message)
 
-class UserAlreadyAssignedError(HTTPException):
+class UserAlreadyAssignedError(InvalidIdError):
     def __init__(self):
         message = "The user is already assigned to this team"
         InvalidIdError.__init__(self, message)
+
+class UserAlreadyReportedHours(InvalidIdError):
+    def __init__(self):
+        message = "User has already reported 8 hours for this day"
+        InvalidIdError.__init__(self, message)
+
+class CannotReportOnWeekendError(InvalidIdError):
+    def __init__(self):
+        message = "Cannot report hours on Saturday or Sunday"
+        InvalidIdError.__init__(self, message)
+
+class CannotReportMoreThanEight(Exception):
+    def __init__(self, total_reported_hours, romania_date):
+        self.message = f"Cannot add more than 8h/day. Currently you have {total_reported_hours}h on this date: {romania_date}"

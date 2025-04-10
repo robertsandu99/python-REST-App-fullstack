@@ -1,6 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date
 
 
 class UserBase(BaseModel):
@@ -52,7 +52,7 @@ class UserHourGet(BaseModel):
     id: int
     users_id: int
     user_name: str
-    date: datetime
+    date: date
     hours: int
     overtime: int
     comment: str
@@ -61,7 +61,7 @@ class UserHourGet(BaseModel):
         from_attributes = True
 
 class UserHourCreate(BaseModel):
-    date: datetime
+    date: date
     hours: int
     overtime: Optional[int] = None
     comment: Optional[str] = None

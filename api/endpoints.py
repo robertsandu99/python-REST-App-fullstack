@@ -3,7 +3,10 @@ from fastapi import Depends, HTTPException, APIRouter, status
 from schemas.schemas import UserCreate, UserGet, TeamCreate, TeamGet, TeamBase, UserBase, UserPut, UserHourGet, UserHourCreate
 from repository.repository import TeamRepo, UserRepo, UserHourRepo
 from typing import List
-from utils.exceptions import InvalidUserIdError, InvalidTeamIdError, UserAlreadyAssignedError
+from utils.exceptions import InvalidUserIdError, InvalidTeamIdError, UserAlreadyAssignedError, UserAlreadyReportedHours, CannotReportOnWeekendError, CannotReportMoreThanEight
+
+
+
 router = APIRouter()
 
 
@@ -92,6 +95,7 @@ async def assign_user_to_team(
     return assigned_user
 
 ############################## USERS_HOURS ##############################################
+
 @router.post(
     "/hours/{users_id}", 
     response_model=UserHourGet,
@@ -107,5 +111,11 @@ async def add_hours_for_users(
     except InvalidUserIdError as e:
         raise HTTPException(status_code=404, detail=e.message)
     except IntegrityError:
-        raise HTTPException(status_code=400, detail="asdasdasddas")
+        raise HTTPException(status_code=400)
+    except UserAlreadyReportedHours as e:
+        raise HTTPException(status_code=400, detail=e.message)
+    except CannotReportOnWeekendError as e:
+        raise HTTPException(status_code=400, detail=e.message)
+    except CannotReportMoreThanEight as e:
+        raise HTTPException(status_code=400, detail=e.message)
     return added_user_hours

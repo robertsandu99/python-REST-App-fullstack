@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, VARCHAR, ForeignKey, Integer, String, DateTime, UniqueConstraint
+from sqlalchemy import Column, VARCHAR, ForeignKey, Integer, String, Date, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
@@ -32,7 +32,7 @@ class UserHour(Base):
 
     id = Column(Integer, primary_key=True)
     users_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    date = Column(DateTime, nullable=False)
+    date = Column(Date, nullable=False)
     hours = Column(Integer, nullable=False)
     user_name = Column(VARCHAR(255), nullable=False)
     overtime = Column(Integer, nullable=True)

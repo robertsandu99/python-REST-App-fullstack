@@ -1,12 +1,12 @@
-from sqlalchemy import select, update
+from sqlalchemy import select, update, and_, func
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.sql.expression import exists
 from database.connection_db import async_session
 from models.models import User, Team, UserHour
 from schemas.schemas import UserCreate, TeamCreate, UserHourCreate
-from utils.exceptions import InvalidUserIdError, UserAlreadyAssignedError, InvalidTeamIdError
+from utils.exceptions import InvalidUserIdError, UserAlreadyAssignedError, InvalidTeamIdError, UserAlreadyReportedHours, CannotReportOnWeekendError, CannotReportMoreThanEight
 from datetime import datetime, timedelta
-from fastapi import HTTPException
+
 
 
 class TeamRepo:
@@ -78,19 +78,41 @@ class UserRepo:
 class UserHourRepo:
     async def create_user_hour(self, users_id: int, userhour: UserHourCreate):
         async with async_session() as session:
+
+            # check if user id exists
             query_user = select(User).where(User.id == users_id)
             result_user = await session.execute(query_user)
             user_obj = result_user.scalar()
-            
             if not user_obj:
                 raise InvalidUserIdError
             
-            # Romania timezone
-            updated_date = userhour.date + timedelta(hours=3)
+            # convert to romania date time (ex: 2025-03-11)
+            romania_date = userhour.date + timedelta(hours=3)
+            if romania_date.weekday() in (5, 6):
+                raise CannotReportOnWeekendError
 
+            # select sum of hours for user id & date
+            query_existing_hours = select(func.sum(UserHour.hours)).where(and_(
+                UserHour.users_id == users_id, UserHour.date == romania_date)
+            )
+
+            result_existing = await session.execute(query_existing_hours)
+            total_reported_hours= result_existing.scalar()
+
+
+            # checks to not have more than 8 and weekend
+            if total_reported_hours is None:
+                total_reported_hours = 0
+            more_than_enough = userhour.hours + total_reported_hours
+            if more_than_enough > 8:
+                raise CannotReportMoreThanEight(total_reported_hours, romania_date)
+            if total_reported_hours > 8:
+                raise UserAlreadyReportedHours
+
+            # create object and add to db
             new_userhour = UserHour(
                 users_id=users_id,
-                date=updated_date.replace(tzinfo=None),
+                date=romania_date,
                 hours=userhour.hours,
                 overtime=userhour.overtime,
                 comment=userhour.comment,
@@ -99,25 +121,3 @@ class UserHourRepo:
             session.add(new_userhour)
             await session.commit()
             return new_userhour
-
-
-    #  async def update_user(self, user_id: int, user_data: UserCreate):
-    #     async with async_session() as session:
-    #         user = await session.get(User, user_id)
-    #         if not user:
-    #             raise HTTPException(status_code=404, detail="User not found")
-            
-    #         # Update user fields
-    #         user.name = user_data.name
-    #         user.email = user_data.email
-
-    #         # If a team is provided in user_data, update the team association
-    #         if user_data.team_id:
-    #             user.teams_id = user_data.team_id
-    #         else:
-    #             user.teams_id = None  # If no team, remove the assignment
-
-    #         session.add(user)
-    #         await session.commit()
-    #         await session.refresh(user)
-    #         return user
